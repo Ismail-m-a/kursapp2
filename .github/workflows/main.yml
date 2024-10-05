@@ -45,9 +45,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   deploy-to-firebase:
-      runs-on: ubuntu-latest
-      needs: check-version-and-publish  # Körs efter publicering till npm
-      steps:
+    runs-on: ubuntu-latest
+    needs: check-version-and-publish  # Körs efter publicering till npm
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -58,21 +58,21 @@ jobs:
         run: firebase deploy --only hosting
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
   notify-discord:
     runs-on: ubuntu-latest
-    needs: check-version-and-publish  # Detta steg körs när check-version-and-publish är klart
-
+    needs: [check-version-and-publish, deploy-to-firebase]  # Detta steg körs efter både publicering och deployment
     steps:
       - name: Send Discord notification on success
-        if: success()  # Körs om jobbet lyckades
+        if: success()  # Körs om alla jobb lyckas
         run: |
           curl -H "Content-Type: application/json" \
-               -d "{\"content\": \"✅ Jobbet lyckades och paketet har publicerats till npm!\"}" \
+               -d "{\"content\": \"✅ Jobbet lyckades och paketet har publicerats till npm och distribuerats till Firebase!\"}" \
                ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - name: Send Discord notification on failure
-        if: failure()  # Körs om jobbet misslyckades
+        if: failure()  # Körs om något jobb misslyckas
         run: |
           curl -H "Content-Type: application/json" \
-               -d "{\"content\": \"❌ Jobbet misslyckades, något gick fel vid publiceringen.\"}" \
+               -d "{\"content\": \"❌ Jobbet misslyckades, något gick fel vid publiceringen eller distributionen.\"}" \
                ${{ secrets.DISCORD_WEBHOOK_URL }}
