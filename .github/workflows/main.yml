@@ -43,3 +43,21 @@ jobs:
         run: npm publish --access public # Ensure public access if it's a scoped package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  notify-discord:
+    runs-on: ubuntu-latest
+    needs: check-version-and-publish  # Detta steg körs när check-version-and-publish är klart
+
+    steps:
+      - name: Send Discord notification on success
+        if: success()  # Körs om jobbet lyckades
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"✅ Jobbet lyckades och paketet har publicerats till npm!\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Send Discord notification on failure
+        if: failure()  # Körs om jobbet misslyckades
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"❌ Jobbet misslyckades, något gick fel vid publiceringen.\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
