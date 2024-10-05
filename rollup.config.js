@@ -1,59 +1,55 @@
-import pkg from './package.json' assert {type: "json"};
+import pkg from './package.json' assert { type: "json" };
 
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import { babel } from '@rollup/plugin-babel';
-
 import terser from '@rollup/plugin-terser';
 import image from '@rollup/plugin-image';
 import postcss from 'rollup-plugin-postcss';
-
 import json from '@rollup/plugin-json';
+import nodePolyfills from 'rollup-plugin-node-polyfills';
 
 export default {
-  input: 'src/index.js', // The entry point for your application
-  output: [
-    {
-            file: pkg.main, // Use package.json's "main" for the CommonJS output
+    input: 'src/index.js',
+    output: [
+        {
+            file: pkg.main,
             format: 'cjs',
             exports: 'named',
-            sourcemap: true // Generate sourcemap for better debugging
+            sourcemap: true
         },
         {
-            file: pkg.module, // Use package.json's "module" for the ESM output
+            file: pkg.module,
             format: 'es',
             exports: 'named',
             sourcemap: true
         },
         {
-            file: pkg.unpkg, // Use package.json's "unpkg" for the UMD output (if applicable)
+            file: pkg.unpkg,
             format: 'umd',
-            name: pkg.name.replace(/[^a-zA-Z0-9]/g, ''), // Clean package name for global usage
+            name: pkg.name.replace(/[^a-zA-Z0-9]/g, ''),
             exports: 'named',
             sourcemap: true,
-            globals: { // Define globals for UMD build if needed
+            globals: {
                 react: 'React',
-                'react-dom': 'ReactDOM'
+                'react-dom': 'ReactDOM',
+                axios: 'axios' // Add this line
             }
         }    
-  ],
-  plugins: [
-    postcss({
-            extensions: ['.css'],
-    }),
-    resolve({
-            extensions: ['.js', '.jsx'],
-            dedupe: ['prop-types']
+    ],
+    plugins: [
+        postcss({ extensions: ['.css'] }),
+        nodePolyfills(),
+        resolve({ extensions: ['.js', '.jsx'], dedupe: ['prop-types'] }),
+        commonjs(),
+        image(),
+        terser(),
+        json(),
+        babel({
+            babelHelpers: 'bundled',
+            exclude: 'node_modules/**',
+            presets: ['@babel/preset-env', '@babel/preset-react']
         }),
-    commonjs(),
-    image(),
-    terser(),
-    json(),
-    babel({
-      babelHelpers: 'bundled', // Bundles the helpers in the same file
-      exclude: 'node_modules/**', // Only transpile your source code
-      presets: ['@babel/preset-env', '@babel/preset-react']
-    }),
-  ],
-  external: Object.keys(pkg.peerDependencies || {})
+    ],
+    external: ['react', 'react-dom', 'axios'] // Ensure React and ReactDOM are externalized
 };
