@@ -1,4 +1,4 @@
-import { Login } from './components/Login';
+import Login  from './components/Login';
 import { ProductStore } from "./components/products";
 import { Register } from "./components/Register";
 import { CartContainer } from "./components/Productcart";
