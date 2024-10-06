@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import styles from './ProductSearch.module.css';
 
 const ProductSearch = ({
@@ -17,37 +17,41 @@ const ProductSearch = ({
   const [selectedProduct, setSelectedProduct] = useState(initialSelectedProduct);
   const inputRef = useRef(null);
 
-  // Optimized useEffect with deep comparison
-  useEffect(() => {
-    setLoading(initialLoading);
-    setNoResult(initialNoResult);
-    if (JSON.stringify(products) !== JSON.stringify(initialProducts)) setProducts(initialProducts);
-    setShowModal(initialShowModal);
-    if (selectedProduct !== initialSelectedProduct) setSelectedProduct(initialSelectedProduct);
-  }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct]);
+  const memoizedProducts = useMemo(() => initialProducts, [initialProducts]);
+  const memoizedSelectedProduct = useMemo(() => selectedProduct, [selectedProduct]);
 
-  // Memoized search function to prevent re-renders
-  const memoizedSearch = useCallback((query) => {
-    if (onSearch) {
-      onSearch(query)
-        .then((searchResults) => {
-          if (searchResults && searchResults.length > 0) {
-            setProducts(searchResults);
-            setNoResult(false);
-          } else {
+  useEffect(() => {
+    if (loading !== initialLoading) setLoading(initialLoading);
+    if (noResult !== initialNoResult) setNoResult(initialNoResult);
+    if (products !== memoizedProducts) setProducts(memoizedProducts);
+    if (showModal !== initialShowModal) setShowModal(initialShowModal);
+    if (selectedProduct !== memoizedSelectedProduct) setSelectedProduct(memoizedSelectedProduct);
+  }, [initialLoading, initialNoResult, memoizedProducts, initialShowModal, memoizedSelectedProduct]);
+
+  const memoizedSearch = useCallback(
+    (query) => {
+      if (onSearch) {
+        onSearch(query)
+          .then((searchResults) => {
+            if (searchResults && searchResults.length > 0) {
+              setProducts(searchResults);
+              setNoResult(false);
+            } else {
+              setProducts([]);
+              setNoResult(true);
+            }
+          })
+          .catch(() => {
             setProducts([]);
             setNoResult(true);
-          }
-        })
-        .catch(() => {
-          setProducts([]);
-          setNoResult(true);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [onSearch]);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }
+    },
+    [onSearch]
+  );
 
   const searchProducts = (e) => {
     e.preventDefault();
