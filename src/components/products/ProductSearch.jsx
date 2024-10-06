@@ -7,7 +7,7 @@ const ProductSearch = ({
   products: initialProducts = [],
   showModal: initialShowModal = false,
   selectedProduct: initialSelectedProduct = null,
-  onSearch, // Custom search function, used to filter products
+  onSearch,
 }) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(initialLoading);
@@ -18,11 +18,21 @@ const ProductSearch = ({
   const inputRef = useRef(null);
 
   useEffect(() => {
-    setLoading(initialLoading);
-    setNoResult(initialNoResult);
-    setProducts(initialProducts);
-    setShowModal(initialShowModal);
-    setSelectedProduct(initialSelectedProduct);
+    if (loading !== initialLoading) {
+      setLoading(initialLoading);
+    }
+    if (noResult !== initialNoResult) {
+      setNoResult(initialNoResult);
+    }
+    if (products !== initialProducts) {
+      setProducts(initialProducts);
+    }
+    if (showModal !== initialShowModal) {
+      setShowModal(initialShowModal);
+    }
+    if (selectedProduct !== initialSelectedProduct) {
+      setSelectedProduct(initialSelectedProduct);
+    }
   }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct]);
 
   const searchProducts = (e) => {
@@ -35,7 +45,6 @@ const ProductSearch = ({
     setLoading(true);
     setNoResult(false);
 
-    // Check if `onSearch` is provided
     if (onSearch) {
       onSearch(query)
         .then((searchResults) => {
