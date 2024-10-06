@@ -17,15 +17,32 @@ const ProductSearch = ({
   const [selectedProduct, setSelectedProduct] = useState(initialSelectedProduct);
   const inputRef = useRef(null);
 
-  // Remove this useEffect as it might be causing re-renders unnecessarily
-  // Syncing props with state is unnecessary if you trust the props to be correct.
+  // Focus input on first render
   useEffect(() => {
     inputRef.current.focus();
   }, []);
 
-  // Memoized search function
-  const memoizedSearch = useCallback(
-    (query) => {
+  // Debounced search to prevent too many re-renders on typing
+  const debounce = (fn, delay) => {
+    let timeoutId;
+    return (...args) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  };
+
+  const searchProducts = useCallback(
+    debounce((query) => {
+      if (!query.trim()) {
+        setProducts([]);
+        setNoResult(false);
+        return;
+      }
+
+      setLoading(true);
+
       if (onSearch) {
         onSearch(query)
           .then((searchResults) => {
@@ -45,21 +62,13 @@ const ProductSearch = ({
             setLoading(false);
           });
       }
-    },
+    }, 500), // 500ms debounce time
     [onSearch]
   );
 
-  const searchProducts = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!query.trim()) {
-      setProducts([]);
-      setNoResult(false);
-      return;
-    }
-
-    setLoading(true);
-    memoizedSearch(query);
+    searchProducts(query);
   };
 
   const handleShowModal = (product) => {
@@ -82,15 +91,12 @@ const ProductSearch = ({
         </ul>
       </div>
 
-      <form onSubmit={searchProducts} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <input
           type="text"
           placeholder="Search for products"
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            if (!e.target.value) setProducts([]);
-          }}
+          onChange={(e) => setQuery(e.target.value)}
           ref={inputRef}
           className={styles.input}
         />
