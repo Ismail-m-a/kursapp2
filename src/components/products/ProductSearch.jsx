@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import styles from './ProductSearch.module.css';
 
 const ProductSearch = ({
@@ -17,17 +17,13 @@ const ProductSearch = ({
   const [selectedProduct, setSelectedProduct] = useState(initialSelectedProduct);
   const inputRef = useRef(null);
 
-  const memoizedProducts = useMemo(() => initialProducts, [initialProducts]);
-  const memoizedSelectedProduct = useMemo(() => selectedProduct, [selectedProduct]);
-
+  // Remove this useEffect as it might be causing re-renders unnecessarily
+  // Syncing props with state is unnecessary if you trust the props to be correct.
   useEffect(() => {
-    if (loading !== initialLoading) setLoading(initialLoading);
-    if (noResult !== initialNoResult) setNoResult(initialNoResult);
-    if (products !== memoizedProducts) setProducts(memoizedProducts);
-    if (showModal !== initialShowModal) setShowModal(initialShowModal);
-    if (selectedProduct !== memoizedSelectedProduct) setSelectedProduct(memoizedSelectedProduct);
-  }, [initialLoading, initialNoResult, memoizedProducts, initialShowModal, memoizedSelectedProduct]);
+    inputRef.current.focus();
+  }, []);
 
+  // Memoized search function
   const memoizedSearch = useCallback(
     (query) => {
       if (onSearch) {
@@ -75,10 +71,6 @@ const ProductSearch = ({
     setSelectedProduct(null);
     setShowModal(false);
   };
-
-  useEffect(() => {
-    inputRef.current.focus();
-  }, []);
 
   return (
     <div className={styles.container}>
