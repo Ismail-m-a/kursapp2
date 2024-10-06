@@ -19,22 +19,27 @@ const ProductSearch = ({
 
   useEffect(() => {
     if (loading !== initialLoading) {
+      console.log('Updating loading state');
       setLoading(initialLoading);
     }
     if (noResult !== initialNoResult) {
+      console.log('Updating noResult state');
       setNoResult(initialNoResult);
     }
     if (products !== initialProducts) {
+      console.log('Updating products state');
       setProducts(initialProducts);
     }
     if (showModal !== initialShowModal) {
+      console.log('Updating showModal state');
       setShowModal(initialShowModal);
     }
     if (selectedProduct !== initialSelectedProduct) {
+      console.log('Updating selectedProduct state');
       setSelectedProduct(initialSelectedProduct);
     }
   }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct]);
-
+  
   const searchProducts = (e) => {
     e.preventDefault();
 
