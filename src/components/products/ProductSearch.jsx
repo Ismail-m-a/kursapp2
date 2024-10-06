@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import styles from './ProductSearch.module.css';
 
 const ProductSearch = ({
@@ -17,27 +17,17 @@ const ProductSearch = ({
   const [selectedProduct, setSelectedProduct] = useState(initialSelectedProduct);
   const inputRef = useRef(null);
 
-  // Optimized to avoid unnecessary re-renders
+  // Optimized useEffect with deep comparison
   useEffect(() => {
     setLoading(initialLoading);
     setNoResult(initialNoResult);
-    if (initialProducts.length !== products.length) setProducts(initialProducts);
+    if (JSON.stringify(products) !== JSON.stringify(initialProducts)) setProducts(initialProducts);
     setShowModal(initialShowModal);
     if (selectedProduct !== initialSelectedProduct) setSelectedProduct(initialSelectedProduct);
-  }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct, products.length, selectedProduct]);
+  }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct]);
 
-  const searchProducts = (e) => {
-    e.preventDefault();
-
-    if (!query.trim()) {
-      setProducts([]);
-      setNoResult(false);
-      return;
-    }
-
-    setLoading(true);
-    setNoResult(false);
-
+  // Memoized search function to prevent re-renders
+  const memoizedSearch = useCallback((query) => {
     if (onSearch) {
       onSearch(query)
         .then((searchResults) => {
@@ -57,6 +47,19 @@ const ProductSearch = ({
           setLoading(false);
         });
     }
+  }, [onSearch]);
+
+  const searchProducts = (e) => {
+    e.preventDefault();
+
+    if (!query.trim()) {
+      setProducts([]);
+      setNoResult(false);
+      return;
+    }
+
+    setLoading(true);
+    memoizedSearch(query);
   };
 
   const handleShowModal = (product) => {
@@ -69,7 +72,6 @@ const ProductSearch = ({
     setShowModal(false);
   };
 
-  // Autofocus the input on the initial render
   useEffect(() => {
     inputRef.current.focus();
   }, []);
