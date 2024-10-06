@@ -17,28 +17,21 @@ const ProductSearch = ({
   const [selectedProduct, setSelectedProduct] = useState(initialSelectedProduct);
   const inputRef = useRef(null);
 
+  // Optimized to avoid unnecessary re-renders
   useEffect(() => {
-    if (initialLoading !== loading) {
-      setLoading(initialLoading);
-    }
-    if (initialNoResult !== noResult) {
-      setNoResult(initialNoResult);
-    }
-    if (JSON.stringify(initialProducts) !== JSON.stringify(products)) {
-      setProducts(initialProducts);
-    }
-    if (initialShowModal !== showModal) {
-      setShowModal(initialShowModal);
-    }
-    if (initialSelectedProduct !== selectedProduct) {
-      setSelectedProduct(initialSelectedProduct);
-    }
-  }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct]);
-  
+    setLoading(initialLoading);
+    setNoResult(initialNoResult);
+    if (initialProducts.length !== products.length) setProducts(initialProducts);
+    setShowModal(initialShowModal);
+    if (selectedProduct !== initialSelectedProduct) setSelectedProduct(initialSelectedProduct);
+  }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct, products.length, selectedProduct]);
+
   const searchProducts = (e) => {
     e.preventDefault();
 
     if (!query.trim()) {
+      setProducts([]);
+      setNoResult(false);
       return;
     }
 
@@ -55,11 +48,13 @@ const ProductSearch = ({
             setProducts([]);
             setNoResult(true);
           }
-          setLoading(false);
         })
         .catch(() => {
-          setLoading(false);
+          setProducts([]);
           setNoResult(true);
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
   };
@@ -74,6 +69,7 @@ const ProductSearch = ({
     setShowModal(false);
   };
 
+  // Autofocus the input on the initial render
   useEffect(() => {
     inputRef.current.focus();
   }, []);
