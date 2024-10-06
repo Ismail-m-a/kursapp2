@@ -18,24 +18,19 @@ const ProductSearch = ({
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (loading !== initialLoading) {
-      console.log('Updating loading state');
+    if (initialLoading !== loading) {
       setLoading(initialLoading);
     }
-    if (noResult !== initialNoResult) {
-      console.log('Updating noResult state');
+    if (initialNoResult !== noResult) {
       setNoResult(initialNoResult);
     }
-    if (products !== initialProducts) {
-      console.log('Updating products state');
+    if (JSON.stringify(initialProducts) !== JSON.stringify(products)) {
       setProducts(initialProducts);
     }
-    if (showModal !== initialShowModal) {
-      console.log('Updating showModal state');
+    if (initialShowModal !== showModal) {
       setShowModal(initialShowModal);
     }
-    if (selectedProduct !== initialSelectedProduct) {
-      console.log('Updating selectedProduct state');
+    if (initialSelectedProduct !== selectedProduct) {
       setSelectedProduct(initialSelectedProduct);
     }
   }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct]);
