@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import styles from './DiscountProducts.module.css'; 
 
@@ -11,13 +11,7 @@ const DiscountProducts = ({ originalPrice, showDiscount = true }) => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('https://fakestoreapi.com/products');
-        // original and discounted prices
-        const productsWithDiscounts = response.data.map(product => ({
-          ...product,
-          originalPrice: product.price,
-          discountedPrice: product.price * 0.8 // 20% discount
-        }));
-        setProducts(productsWithDiscounts);
+        setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
       }
@@ -25,6 +19,15 @@ const DiscountProducts = ({ originalPrice, showDiscount = true }) => {
 
     fetchProducts();
   }, []);
+
+  // Memoize products with discounts to avoid recalculating unnecessarily
+  const productsWithDiscounts = useMemo(() => {
+    return products.map(product => ({
+      ...product,
+      originalPrice: product.price,
+      discountedPrice: product.price * 0.8 // 20% discount
+    }));
+  }, [products]);
 
   const handleShow = (product) => {
     setSelectedProduct(product);
@@ -49,7 +52,7 @@ const DiscountProducts = ({ originalPrice, showDiscount = true }) => {
       </div>
       <br />
       <ul className={styles.discountProductsList}>
-        {products.map((product) => (
+        {productsWithDiscounts.map((product) => (
           <li key={product.id} className={styles.discountProductsItem} onClick={() => handleShow(product)}>
             <h6>{product.title}</h6>
             <img src={product.image} alt={product.title} />
@@ -57,13 +60,11 @@ const DiscountProducts = ({ originalPrice, showDiscount = true }) => {
             <br />
             <p><strong>Category: </strong> {product.category}</p>
             
-            {/* Use the prop originalPrice */}
             <strong>Original Price: </strong> 
             <p className={styles.originalPrice}>
               ${originalPrice ? originalPrice.toFixed(2) : product.originalPrice.toFixed(2)}
             </p>
 
-            {/* show discounted if showDiscount is true */}
             {showDiscount && (
               <p>
                 <strong>Discounted Price:</strong> 

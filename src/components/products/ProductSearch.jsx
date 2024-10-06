@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './ProductSearch.module.css';
 
 const ProductSearch = ({
@@ -7,7 +7,7 @@ const ProductSearch = ({
   products: initialProducts = [],
   showModal: initialShowModal = false,
   selectedProduct: initialSelectedProduct = null,
-  onSearch,
+  onSearch, // Custom search function, used to filter products
 }) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(initialLoading);
@@ -17,58 +17,42 @@ const ProductSearch = ({
   const [selectedProduct, setSelectedProduct] = useState(initialSelectedProduct);
   const inputRef = useRef(null);
 
-  // Focus input on first render
   useEffect(() => {
-    inputRef.current.focus();
-  }, []);
+    setLoading(initialLoading);
+    setNoResult(initialNoResult);
+    setProducts(initialProducts);
+    setShowModal(initialShowModal);
+    setSelectedProduct(initialSelectedProduct);
+  }, [initialLoading, initialNoResult, initialProducts, initialShowModal, initialSelectedProduct]);
 
-  // Debounced search to prevent too many re-renders on typing
-  const debounce = (fn, delay) => {
-    let timeoutId;
-    return (...args) => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        fn(...args);
-      }, delay);
-    };
-  };
+  const searchProducts = (e) => {
+    e.preventDefault();
 
-  const searchProducts = useCallback(
-    debounce((query) => {
-      if (!query.trim()) {
-        setProducts([]);
-        setNoResult(false);
-        return;
-      }
+    if (!query.trim()) {
+      return;
+    }
 
-      setLoading(true);
+    setLoading(true);
+    setNoResult(false);
 
-      if (onSearch) {
-        onSearch(query)
-          .then((searchResults) => {
-            if (searchResults && searchResults.length > 0) {
-              setProducts(searchResults);
-              setNoResult(false);
-            } else {
-              setProducts([]);
-              setNoResult(true);
-            }
-          })
-          .catch(() => {
+    // Check if `onSearch` is provided
+    if (onSearch) {
+      onSearch(query)
+        .then((searchResults) => {
+          if (searchResults && searchResults.length > 0) {
+            setProducts(searchResults);
+            setNoResult(false);
+          } else {
             setProducts([]);
             setNoResult(true);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      }
-    }, 500), // 500ms debounce time
-    [onSearch]
-  );
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    searchProducts(query);
+          }
+          setLoading(false);
+        })
+        .catch(() => {
+          setLoading(false);
+          setNoResult(true);
+        });
+    }
   };
 
   const handleShowModal = (product) => {
@@ -81,6 +65,10 @@ const ProductSearch = ({
     setShowModal(false);
   };
 
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
+
   return (
     <div className={styles.container}>
       <div className={styles.title}>
@@ -91,12 +79,15 @@ const ProductSearch = ({
         </ul>
       </div>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <form onSubmit={searchProducts} className={styles.form}>
         <input
           type="text"
           placeholder="Search for products"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!e.target.value) setProducts([]);
+          }}
           ref={inputRef}
           className={styles.input}
         />
