@@ -1,4 +1,6 @@
-import {Login} from './Login';
+//index.js
+
+import Login from './Login';
 
 export {Login};
 
